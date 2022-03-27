@@ -113,6 +113,8 @@ class Sniffer:
     def dissect_ip(self, ip_header, packet):
         """Dysekcja nagłówka IP"""
         output = ''
+        offset = 0
+        service = None
 
         if len(packet) < 32:
             padding = 32 - len(packet)
@@ -122,11 +124,33 @@ class Sniffer:
         if ip_header.protocol_name == 'ICMP':
             icmp_header = Dissector.ICMPHeader(packet + b' ' * padding)
             output = str(icmp_header)
+            offset += 8
         elif ip_header.protocol_name == 'UDP':
             udp_header = Dissector.UDPHeader(packet + b' ' * padding)
             output = str(udp_header)
+            offset = 8
+            service = udp_header.service
         elif ip_header.protocol_name == 'TCP':
             tcp_header = Dissector.TCPHeader(packet + b' ' * padding)
             output = str(tcp_header)
+            offset = tcp_header.len * 4
+            service = tcp_header.service
+
+        if service:
+            segment = packet[offset:]
+            if len(segment) < 32:
+                padding = 32 - len(segment)
+            else:
+                padding = 0
+
+            output += '\n\t\t\t+ ' + self.dissect_transport_layer(service, segment)
+
+        return output
+
+    def dissect_transport_layer(self, service, segment):
+        output = ''
+        if service == 'DNS':
+            dns_header = Dissector.DNSHeader(segment)
+            output += str(dns_header)
 
         return output
