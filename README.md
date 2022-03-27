@@ -2,7 +2,7 @@
 
 Implementacja sniffera sieciowego bazującego na surowych gniazdach, który przechwytuje ramki i przedstawia część informacji (np. źródłowy i docelowy adres MAC, źródłowy i docelowy adres IPv4, źródłowy i docelowy port) w postaci czytelnej dla człowieka
 
-W pliku `Dissector.py` znajdują się klasy reprezentujące struktury nagłówków wybranych protokołów sieciowych, oraz funkcja `service_lookup`, która próbuje odgadnąć uruchomioną usługę na podstawie danych numerów portów
+W pliku `Dissector.py` znajdują się klasy reprezentujące struktury nagłówków wybranych protokołów sieciowych, oraz funkcja `service_lookup` która próbuje odgadnąć uruchomioną usługę na podstawie danych numerów portów
 
 ```python
 service_lookup(src_port, dst_port)
@@ -27,3 +27,4 @@ Na chwilę obecną program obsługuje tylko protokoły:
 - ICMP
 - UDP
 - TCP
+- DNS
