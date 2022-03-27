@@ -64,6 +64,62 @@ class ARPHeader(Structure):
             return f"ARP Reply: {self.src_ip} is at {self.src_mac}"
 
 
+class DNSHeader(Structure):
+    _fields_ = [
+        ('ID', c_uint16),
+        ('QR', c_uint16, 1),
+        ('OPCODE', c_uint16, 4),
+        ('AA', c_uint16, 1),
+        ('TC', c_uint16, 1),
+        ('RD', c_uint16, 1),
+        ('RA', c_uint16, 1),
+        ('z', c_uint16, 3),
+        ('RCODE', c_uint16, 4),
+        ('QDCOUNT', c_uint16),
+        ('ANCOUNT', c_uint16),
+        ('NSCOUNT', c_uint16),
+        ('ARCOUNT', c_uint16)
+    ]
+
+    def __new__(cls, buffer=None):
+        return cls.from_buffer_copy(buffer)
+
+    def __init__(self, buffer=None):
+        self.qr = 'Response' if self.QR else 'Query'
+
+        if self.OPCODE == 0:
+            self.opcode = 'QUERY'
+        elif self.OPCODE == 1:
+            self.opcode = 'IQUERY'
+        elif self.OPCODE == 2:
+            self.opcode = 'STATUS'
+        else:
+            self.opcode = self.OPCODE
+
+        self.flags = ''
+        if self.AA:
+            self.flags += '[Authorative Answer]'
+        if self.TC:
+            self.flags += '[TrunCation]'
+        if self.RD:
+            self.flags += '[Recursion Desired]'
+        if self.RA:
+            self.flags += '[Recursion Available]'
+
+        self.qd_count = socket.ntohs(self.QDCOUNT)
+        self.an_count = socket.ntohs(self.ANCOUNT)
+        self.ns_count = socket.ntohs(self.NSCOUNT)
+        self.ar_count = socket.ntohs(self.ARCOUNT)
+
+    def __str__(self):
+        dns = f'DNS {self.qr} opcode: {self.opcode}, {self.flags}\n'
+        #dns += f'\t- QDCOUNT: {self.qd_count}\n'
+        #dns += f'\t- ANCOUNT: {self.an_count}\n'
+        #dns += f'\t- NSCOUNT: {self.ns_count}\n'
+        #dns += f'\t- ARCOUNT: {self.ar_count}'
+        return dns
+
+
 class UDPHeader(Structure):
     _fields_ = [
         ('sport', c_uint16),
