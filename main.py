@@ -1,8 +1,8 @@
 import os
 
 if os.name == 'nt':
-        print('[!!] Ten sniffer działa pod linuxem, przepraszamy :(')
-        quit()
+    print('[!!] Ten sniffer działa pod linuxem, przepraszamy :(')
+    quit()
 
 from PacketSniffer.Sniffer import Sniffer
 
