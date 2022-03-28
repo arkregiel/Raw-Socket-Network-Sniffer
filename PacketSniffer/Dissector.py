@@ -1,5 +1,6 @@
 import struct
 import socket
+import re
 from binascii import hexlify
 from ctypes import *
 
@@ -21,7 +22,8 @@ def service_lookup(src_port, dst_port=-1):
         143: 'IMAP',
         161: 'SNMP',
         162: 'SNMP (trap)',
-        443: 'HTTPS'
+        443: 'HTTPS',
+        25565: 'Minecraft Server'
     }
 
     if src_port in port_to_service_map.keys():
@@ -85,7 +87,7 @@ class DNSHeader(Structure):
         return cls.from_buffer_copy(buffer)
 
     def __init__(self, buffer=None):
-        self.qr = 'Response' if self.QR else 'Query'
+        self.segment = buffer[13:]
 
         if self.OPCODE == 0:
             self.opcode = 'QUERY'
@@ -111,13 +113,28 @@ class DNSHeader(Structure):
         self.ns_count = socket.ntohs(self.NSCOUNT)
         self.ar_count = socket.ntohs(self.ARCOUNT)
 
+        self.parse_data()
+
+    def parse_data(self):
+        data = self.segment
+        data = data.replace(b'\x02', b'.')
+        data = data.replace(b'\x03', b'.')
+        data = data.replace(b'\x04', b'.')
+        data = data.replace(b'\x05', b'.')
+        data = data.replace(b'\x07', b'.')
+        data = data.replace(b'\t', b'.')
+        data = data.replace(b'\x0b', b'.')
+        data = data.replace(b'\x0c', b'.')
+        data = list(set(re.split(r'\\x[0-9a-z][0-9a-z]', str(data).strip("b'"))))
+        parsed = []
+        for i in range(len(data)):
+            if len(data[i]) > 2 and '\\' not in data[i] and '.' in data[i]:
+                parsed.append(data[i].strip('.'))
+        data = ' | '.join(parsed)
+        self.data = data
+
     def __str__(self):
-        dns = f'DNS {self.qr} opcode: {self.opcode}, {self.flags}\n'
-        #dns += f'\t- QDCOUNT: {self.qd_count}\n'
-        #dns += f'\t- ANCOUNT: {self.an_count}\n'
-        #dns += f'\t- NSCOUNT: {self.ns_count}\n'
-        #dns += f'\t- ARCOUNT: {self.ar_count}'
-        return dns
+        return f'DNS opcode: {self.opcode}, {self.flags}'
 
 
 class UDPHeader(Structure):
@@ -261,7 +278,7 @@ class IPHeader(Structure):
         if self.protocol in self.protocols.keys():
             self.protocol_name = self.protocols[self.protocol]
         else:
-            self.protocol_name = self.protocols[self.protocol]
+            self.protocol_name = self.protocol
 
     def __str__(self):
         return f"IP {self.src_address} -> {self.dst_address} | {self.protocol_name}"
