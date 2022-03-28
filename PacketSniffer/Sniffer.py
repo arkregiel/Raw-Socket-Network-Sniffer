@@ -2,6 +2,8 @@ import socket
 import os
 import fcntl
 import ctypes
+import re
+from binascii import hexlify
 from datetime import datetime as dt
 
 from PacketSniffer import Dissector
@@ -20,14 +22,15 @@ class ifreq(ctypes.Structure):
 
 
 class Sniffer:
-    def __init__(self, interface, verbose=True, output_file=None):
+    def __init__(self, interface, verbose=True, output_file=None, dump=True):
         """Tworzenie sniffera sieciowego\n
         \tinterface - NIC, z którego będą przechwytywane ramki (argument obowiązkowy)
         \tverbose - czy wypisywać wyniki na stdout (opcjonalne)
         \toutput_file - plik, do którego zapisać wyniki
         """
 
-        self.interface, self.verbose, self.file = interface, verbose, output_file
+        self.interface, self.verbose, self.file, self.dump = interface, verbose, output_file, dump
+        self.date = dt.now().strftime("_%Y%m%d")
 
         # utworzenie surowego gniazda
         self.sniffer = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_ALL))
@@ -38,6 +41,16 @@ class Sniffer:
         self.ifr.ifr_ifrn = self.interface.encode()
 
         self.counter = 0
+
+    def hexdump(self, buffer):
+        hxdmp = []
+        for i in range(0, len(buffer), 16):
+            row = hexlify(buffer[i:i + 16], b' ').decode()
+            padding = 48 - len(row) if len(row) < 48 else 0
+            row += ' ' * padding + ' ' + re.sub(rb'[^ -~]', b'.', buffer[i:i + 16]).decode()
+            hxdmp.append(row)
+        hxdmp = '\n'.join(hxdmp)
+        return hxdmp
 
     def start_sniffing(self):
         """Rozpoczynanie przechwytywania ramek"""
@@ -55,8 +68,14 @@ class Sniffer:
         try:
             while True:
                 raw_buffer = self.sniffer.recvfrom(65535)[0]
+                hexdump = self.hexdump(raw_buffer)
                 self.counter += 1
+                if self.dump:
+                    with open('DUMP' + self.date + '.bin', 'ab') as f:
+                        f.write(raw_buffer + b'\x00' * (1518 - len(raw_buffer)))
                 output = self.dissect_eth(raw_buffer)
+                output += '\n\n' + str(hexdump) + '\n\n'
+                output += '\n\n' + '-' * 65 + '\n'
                 if self.verbose:
                     print(output)
                 if self.file:
@@ -107,7 +126,6 @@ class Sniffer:
             arp_header = Dissector.ARPHeader(buf + b' ' * 6)
             output += '+ ' + str(arp_header)
         
-        output += '\n\n' + '-' * 60 + '\n'
         return output
 
     def dissect_ip(self, ip_header, packet):
@@ -143,14 +161,19 @@ class Sniffer:
             else:
                 padding = 0
 
-            output += '\n\t\t\t+ ' + self.dissect_transport_layer(service, segment)
+            output += '\n\t\t\t+ ' + self.dissect_app_layer(service, segment)
 
         return output
 
-    def dissect_transport_layer(self, service, segment):
+    def dissect_app_layer(self, service, segment):
         output = ''
         if service == 'DNS':
             dns_header = Dissector.DNSHeader(segment)
-            output += str(dns_header)
+            output += str(dns_header) + '\n\t\t\t\t'
+            output += '- QDCOUNT: ' + str(dns_header.qd_count) + '\n\t\t\t\t'
+            output += '- ANCOUNT: ' + str(dns_header.an_count) + '\n\t\t\t\t'
+            output += '- NSCOUNT: ' + str(dns_header.ns_count) + '\n\t\t\t\t'
+            output += '- ARCOUNT: ' + str(dns_header.ar_count) + '\n\t\t\t\t'
+            output += '- ' + dns_header.data
 
         return output
