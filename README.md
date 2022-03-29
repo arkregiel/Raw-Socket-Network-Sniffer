@@ -115,5 +115,5 @@ Klasa `Sniffer` oferuje zawiera metody:
 - `dissect_ip(self, ip_header, packet)`
     - z otrzymanego pakietu IP tworzy obiekt `Dissector.IPHeader` i określa protokół warstwy wyżej
     - w przypadku warstwy transportowej (TCP, UDP) określa usługę
-- `dissect_app_layer(self, service, segment`
+- `dissect_app_layer(self, service, segment)`
     - na podstawie argumentu `service` określa protokół warstwy aplikacji i przetwarza jego dane
