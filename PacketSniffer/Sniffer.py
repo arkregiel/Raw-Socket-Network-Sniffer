@@ -175,5 +175,8 @@ class Sniffer:
             output += '- NSCOUNT: ' + str(dns_header.ns_count) + '\n\t\t\t\t'
             output += '- ARCOUNT: ' + str(dns_header.ar_count) + '\n\t\t\t\t'
             output += '- ' + dns_header.data
+        elif service == 'DHCP':
+            dhcp_header = Dissector.DHCPHeader(segment)
+            output += str(dhcp_header)
 
         return output
