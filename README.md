@@ -8,6 +8,24 @@ Z uwagi na wykorzystanie surowego gniazda, program należy uruchamiać z opcją 
 $ sudo python main.py
 ```
 
+```
+sposób użycia:
+
+	$ sudo python RawSocketPacketSniffer/main.py -i <interface> [options]
+
+opcje:
+
+	-h --help			wyświetla tę pomoc
+	-i --interface=<interface>	interfejs, z którym powiązać gniazdo
+	-v --verbose			wyświetlanie danych na ekran
+	-o --outputfile=<filename>	plik, do którego zapisać dane
+	-d --dump			czy zrzucać surowe przechwycone dane do pliku
+
+przykład:
+
+$ sudo python RawSocketPacketSniffer/main.py -i wlan0 --verbose -o captured.txt
+```
+
 Na chwilę obecną program obsługuje tylko protokoły:
 
 - IPv4
