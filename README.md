@@ -1,6 +1,6 @@
 # Sniffer sieciowy z użyciem surowych gniazd (Linux)
 
-Implementacja sniffera sieciowego bazującego na surowych gniazdach, który przechwytuje ramki i przedstawia część informacji (np. źródłowy i docelowy adres MAC, źródłowy i docelowy adres IPv4, źródłowy i docelowy port) w postaci czytelnej dla człowieka
+Implementacja sniffera sieciowego bazującego na surowych gniazdach, który przechwytuje ramki i przedstawia część informacji (np. źródłowy i docelowy adres MAC, źródłowy i docelowy adres IPv4, źródłowy i docelowy port) w postaci czytelnej dla człowieka. Tego typu oprogramowanie pozwala zaobserwować zastosowanie teoretycznego modelu TCP/IP w praktyce
 
 Z uwagi na wykorzystanie surowego gniazda, program należy uruchamiać z opcją `sudo`
 
@@ -16,6 +16,7 @@ Na chwilę obecną program obsługuje tylko protokoły:
 - UDP
 - TCP
 - DNS
+- DHCP
 
 ## PacketSniffer
 
@@ -30,6 +31,7 @@ W tym pliku znajdują się następujące klasy, próbujące odwzorować struktur
 - `TCPHeader`
 - `UDPHeader`
 - `DNSHeader`
+- `DHCPHeader`
 
 Jako parametr konstruktora każda z tych klas przyjmuje bufor rozpoczynający się nagłówkiem danego protokołu i tworzy jego strukturę, podobnie jak w języku C dzięki modułowi `ctypes`
 
@@ -60,7 +62,6 @@ def service_lookup(src_port, dst_port=-1):
         161: 'SNMP',
         162: 'SNMP (trap)',
         443: 'HTTPS',
-        25565: 'Minecraft Server'
     }
 
     if src_port in port_to_service_map.keys():
