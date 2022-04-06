@@ -16,9 +16,12 @@ def service_lookup(src_port, dst_port=-1):
         43: 'WHOIS',
         49: 'TACACS',
         53: 'DNS',
+        67: 'DHCP',
+        68: 'DHCP',
         80: 'HTTP',
         88: 'Kerberos',
         110: 'POP3',
+        123: 'NTP',
         143: 'IMAP',
         161: 'SNMP',
         162: 'SNMP (trap)',
@@ -64,6 +67,52 @@ class ARPHeader(Structure):
             return f"ARP Request: who has {self.dst_ip}? tell {self.src_ip}"
         elif self.operation == 2:
             return f"ARP Reply: {self.src_ip} is at {self.src_mac}"
+
+
+class DHCPHeader(Structure):
+    _fields_ = [
+        ("op", c_ubyte),
+        ("htype", c_ubyte),
+        ("hlen", c_ubyte),
+        ("hops", c_ubyte),
+        ("xid", c_uint32),
+        ("secs", c_uint16),
+        ("flags", c_uint16),
+        ("ciaddr", c_uint32),
+        ("yiaddr", c_uint32),
+        ("siaddr", c_uint32),
+        ("giaddr", c_uint32),
+        ("chaddr", c_ubyte * 16),
+        ("sname", c_ubyte * 64),
+        ("bootp", c_ubyte * 128),
+        ("magic_cookie", c_uint32),
+        ("opt", c_ubyte), # na razie tylko dla opcji 53: DHCP message type
+        ("opt_len", c_ubyte),
+        ("code", c_uint8)
+    ]
+
+    def __new__(cls, buffer=None):
+        return cls.from_buffer_copy(buffer)
+
+    def __init__(self, buffer=None):
+        self.msg = ''
+        if self.opt == 53:
+            self.msg = 'DHCP'
+            if self.code == 1:
+                self.msg += 'DISCOVER'
+            elif self.code == 2:
+                self.msg += 'OFFER'
+            elif self.code == 3:
+                self.msg += 'REQUEST'
+            elif self.code == 4:
+                self.msg += 'DECLINE'
+            elif self.code == 5:
+                self.msg += 'ACK'
+            else:
+                self.msg += f' option: {self.opt}, code: {self.code}'
+
+    def __str__(self):
+        return self.msg
 
 
 class DNSHeader(Structure):
@@ -298,7 +347,7 @@ class EthernetHeader(Structure):
         self.protocols = {
             0x800: 'IP',
             0x806: 'ARP',
-            0x80DD: 'IPv6'
+            0x86DD: 'IPv6'
         }
 
         self.ether_type = socket.htons(self.h_proto)
