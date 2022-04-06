@@ -23,7 +23,7 @@ opcje:
 
 przykład:
 
-$ sudo python RawSocketPacketSniffer/main.py -i wlan0 --verbose -o captured.txt
+$ sudo python main.py -i wlan0 --verbose -o captured.txt
 ```
 
 Na chwilę obecną program obsługuje tylko protokoły:
