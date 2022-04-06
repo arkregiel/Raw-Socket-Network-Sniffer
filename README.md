@@ -11,7 +11,7 @@ $ sudo python main.py
 ```
 sposób użycia:
 
-	$ sudo python RawSocketPacketSniffer/main.py -i <interface> [options]
+	$ sudo python main.py -i <interface> [options]
 
 opcje:
 
