@@ -53,6 +53,40 @@ W tym pliku znajdują się następujące klasy, próbujące odwzorować struktur
 
 Jako parametr konstruktora każda z tych klas przyjmuje bufor rozpoczynający się nagłówkiem danego protokołu i tworzy jego strukturę, podobnie jak w języku C dzięki modułowi `ctypes`
 
+```c
+/* struktura naglowka ARP w C */
+struct arpheader {
+    u_int16_t htype;
+    u_int16_t ptype;
+    u_char hlen;
+    u_char plen;
+    u_int16_t oper; 
+    u_char sha[6]; 
+    u_char spa[4]; 
+    u_char tha[6];
+    u_char tpa[4];
+};
+```
+
+```py
+from ctypes import *
+
+class ARPHeader(Structure):
+    _fields_ = [
+        ('htype', c_uint16),
+        ('ptype', c_uint16),
+        ('hlen', c_ubyte),
+        ('plen', c_ubyte),
+        ('oper', c_uint16),
+        ('sha', c_ubyte * 6),
+        ('spa', c_ubyte * 4),
+        ('tha', c_ubyte * 6),
+        ('tpa', c_ubyte * 4)
+    ]
+```
+
+Przykładowo
+
 ```python
 ip_header = Dissector.IPHeader(buf)
 ```
