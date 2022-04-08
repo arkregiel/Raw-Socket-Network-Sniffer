@@ -115,7 +115,7 @@ funkcja `socket` z modułu `socket` przyjmuje argumenty:
 - typ `socket.SOCK_RAW`
 - stała `ETH_P_ALL` (wszystkie protokoły)
 
-Klasa `Sniffer` oferuje zawiera metody:
+Klasa `Sniffer` zawiera metody:
 
 - `hexdump(self, buffer)`
     - Tworzy zrzut szesnastkowy z otrzymanej ramki
