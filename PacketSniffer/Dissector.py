@@ -136,7 +136,7 @@ class DNSHeader(Structure):
         return cls.from_buffer_copy(buffer)
 
     def __init__(self, buffer=None):
-        self.segment = buffer[13:]
+        self.segment = buffer[12:]
 
         if self.OPCODE == 0:
             self.opcode = 'QUERY'
@@ -166,24 +166,19 @@ class DNSHeader(Structure):
 
     def parse_data(self):
         data = self.segment
-        data = data.replace(b'\x02', b'.')
-        data = data.replace(b'\x03', b'.')
-        data = data.replace(b'\x04', b'.')
-        data = data.replace(b'\x05', b'.')
-        data = data.replace(b'\x07', b'.')
-        data = data.replace(b'\t', b'.')
-        data = data.replace(b'\x0b', b'.')
-        data = data.replace(b'\x0c', b'.')
-        data = list(set(re.split(r'\\x[0-9a-z][0-9a-z]', str(data).strip("b'"))))
-        parsed = []
-        for i in range(len(data)):
-            if len(data[i]) > 2 and '\\' not in data[i] and '.' in data[i]:
-                parsed.append(data[i].strip('.'))
-        data = ' | '.join(parsed)
-        self.data = data
+        name = ''
+        offset = 0
+        self.data = name
+        while offset < len(data) and data[offset] != 0x00:
+            length = data[offset]
+            name += data[offset + 1 : offset + length + 1].decode()
+            name += '.'
+            offset += length + 1
+        
+        self.data = name.rstrip('.')
 
     def __str__(self):
-        return f'DNS opcode: {self.opcode}, {self.flags}'
+        return f'DNS opcode: {self.opcode}, {self.flags} | {self.data}'
 
 
 class UDPHeader(Structure):
